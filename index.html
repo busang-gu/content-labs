@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>부상구 콘텐츠 작업실</title>
+<meta name="description" content="릴스·캐러셀 레퍼런스 수집 + 콘텐츠 기획 칸반. 부상구 콘텐츠 작업실." />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  :root {
+    --bg: #FFFFFF;
+    --bg-alt: #F4F4F4;
+    --ink: #0A0A0A;
+    --ink-soft: #1F1F1F;
+    --muted: #888888;
+    --line: #E5E5E5;
+    --paper: #FFFFFF;
+    --accent: #5BD66B;
+    --accent-soft: #E8F8E4;
+    --accent-deep: #2E9B3F;
+    --gold: #C9A24A;
+    --type-reels: #FF6B6B;
+    --type-carousel: #5BD66B;
+    --type-plan: #4D96FF;
+    --shadow: 0 1px 0 rgba(0,0,0,0.03), 0 6px 20px -8px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", sans-serif;
+    font-weight: 450;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
+
+  .topbar {
+    border-bottom: 1px solid var(--line);
+    padding: 14px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(8px);
+  }
+  .topbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .logo-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+  .top-meta {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+  .top-meta b { color: var(--ink); font-weight: 700; }
+
+  .hero {
+    padding: 96px 0 56px;
+    border-bottom: 1px solid var(--line);
+  }
+  .kicker {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    color: var(--accent-deep);
+    text-transform: uppercase;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .kicker::before, .kicker::after {
+    content: '';
+    height: 1px;
+    flex: 0 0 32px;
+    background: var(--accent);
+  }
+  .kicker::after { flex: 1; }
+  .hero h1 {
+    font-family: "Pretendard Variable", Pretendard, sans-serif;
+    font-size: clamp(44px, 6.5vw, 84px);
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    margin-bottom: 24px;
+    color: var(--ink);
+  }
+  .hero h1 em { font-style: normal; color: var(--accent-deep); }
+  .hero-sub {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    max-width: 620px;
+    line-height: 1.7;
+  }
+  .hero-meta {
+    margin-top: 36px;
+    display: flex;
+    gap: 32px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    flex-wrap: wrap;
+  }
+  .hero-meta span b { color: var(--ink); font-weight: 700; }
+
+  .labs {
+    padding: 72px 0 80px;
+  }
+  .labs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 1024px) { .labs-grid { grid-template-columns: 1fr; } .hero { padding: 56px 0 40px; } .labs { padding: 48px 0; } }
+
+  .lab-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 36px 32px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    min-height: 360px;
+  }
+  .lab-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--lab-color, var(--accent));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s;
+  }
+  .lab-card:hover {
+    border-color: var(--ink);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+  }
+  .lab-card:hover::before { transform: scaleX(1); }
+  .lab-card[data-lab="reels"] { --lab-color: var(--type-reels); }
+  .lab-card[data-lab="carousel"] { --lab-color: var(--type-carousel); }
+  .lab-card[data-lab="planning"] { --lab-color: var(--type-plan); }
+
+  .lab-num {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .lab-icon {
+    font-size: 40px;
+    line-height: 1;
+  }
+  .lab-name {
+    font-family: "Pretendard Variable", Pretendard, sans-serif;
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-top: 4px;
+  }
+  .lab-en {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--lab-color, var(--accent-deep));
+    text-transform: uppercase;
+    margin-top: -8px;
+  }
+  .lab-desc {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    line-height: 1.65;
+    flex: 1;
+  }
+  .lab-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: auto;
+  }
+  .lab-tags span {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 4px 8px;
+    background: var(--bg-alt);
+    color: var(--ink-soft);
+    border-radius: 2px;
+  }
+  .lab-cta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    margin-top: 4px;
+  }
+  .lab-cta .arrow {
+    transition: transform 0.2s;
+    font-size: 14px;
+  }
+  .lab-card:hover .arrow { transform: translateX(6px); }
+
+  .note {
+    margin-top: 56px;
+    padding: 28px 32px;
+    background: var(--bg-alt);
+    border: 1px solid var(--line);
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .note-label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--accent-deep);
+    font-weight: 800;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    padding-top: 4px;
+  }
+  .note-body {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+  .note-body b { color: var(--ink); font-weight: 700; }
+
+  .footer {
+    border-top: 1px solid var(--line);
+    padding: 32px 0;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .footer b { color: var(--ink); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <span>부상구 / CONTENT LABS</span>
+    </div>
+    <div class="top-meta">
+      <span>BUILD <b>v1.0</b></span>
+    </div>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker">CONTENT LABS __ 부상구 콘텐츠 작업실</div>
+    <h1>레퍼런스를 쌓고,<br>기획을 <em>설계한다.</em></h1>
+    <p class="hero-sub">
+      터진 릴스·캐러셀을 분석해 패턴을 모으고, 그 위에서 다음 콘텐츠를 기획한다. 부상구의 콘텐츠 작업실.
+    </p>
+    <div class="hero-meta">
+      <span>STORAGE __ <b>BROWSER LOCAL</b></span>
+      <span>EXPORT __ <b>JSON BACKUP</b></span>
+      <span>FORMAT __ <b>REELS · CAROUSEL · NEWSLETTER · THUMB</b></span>
+    </div>
+  </div>
+</section>
+
+<section class="labs">
+  <div class="wrap">
+    <div class="labs-grid">
+      <a href="./reels-lab/" class="lab-card" data-lab="reels">
+        <div class="lab-num">__ 01</div>
+        <div class="lab-icon">🎬</div>
+        <div class="lab-en">REELS LAB</div>
+        <div class="lab-name">릴스 레퍼런스</div>
+        <p class="lab-desc">
+          터진 릴스의 첫 3초 훅, 전체 스크립트, 댓글 감정, 편집 패턴을 분석·수집. 다음 영상의 가설을 여기서 찾는다.
+        </p>
+        <div class="lab-tags">
+          <span>HOOK</span>
+          <span>SCRIPT</span>
+          <span>COMMENT</span>
+          <span>BGM</span>
+          <span>★ RATING</span>
+        </div>
+        <div class="lab-cta">
+          REELS LAB 열기 <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a href="./carousel-lab/" class="lab-card" data-lab="carousel">
+        <div class="lab-num">__ 02</div>
+        <div class="lab-icon">🎴</div>
+        <div class="lab-en">CAROUSEL LAB</div>
+        <div class="lab-name">캐러셀 레퍼런스</div>
+        <p class="lab-desc">
+          저장률 높은 캐러셀의 표지 훅, 10슬라이드 감정 아크, 디자인 패턴, 댓글 반응을 정리. 저장되는 카드뉴스의 공식을 만든다.
+        </p>
+        <div class="lab-tags">
+          <span>COVER</span>
+          <span>SLIDES</span>
+          <span>SAVES</span>
+          <span>DESIGN</span>
+          <span>★ RATING</span>
+        </div>
+        <div class="lab-cta">
+          CAROUSEL LAB 열기 <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a href="./planning-lab/" class="lab-card" data-lab="planning">
+        <div class="lab-num">__ 03</div>
+        <div class="lab-icon">🧠</div>
+        <div class="lab-en">PLANNING LAB</div>
+        <div class="lab-name">콘텐츠 기획실</div>
+        <p class="lab-desc">
+          아이디어 → 기획 → 제작 → 발행 4단계 칸반. 캐러셀·릴스·뉴스레터·썸네일 4종 템플릿 + 10슬라이드 구조 빌더 내장.
+        </p>
+        <div class="lab-tags">
+          <span>KANBAN</span>
+          <span>DRAG-DROP</span>
+          <span>4 TYPES</span>
+          <span>10 SLIDES</span>
+          <span>SCHEDULE</span>
+        </div>
+        <div class="lab-cta">
+          PLANNING LAB 열기 <span class="arrow">→</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="note">
+      <div class="note-label">__ NOTE</div>
+      <div class="note-body">
+        모든 데이터는 <b>내 브라우저(localStorage)에만 저장</b>됩니다. 페이지는 공개돼 있지만 수집한 레퍼런스·기획 메모는 외부에 노출되지 않아요. 다른 기기로 옮기거나 백업이 필요하면 각 lab의 <b>↓ JSON 백업</b> 버튼을 사용하세요.
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap" style="display:flex; justify-content:space-between; width:100%; flex-wrap:wrap; gap:16px;">
+    <span>© CONTENT LABS / 부상구 — <b>perfect personal investing</b></span>
+    <span>EST __ 2026</span>
+  </div>
+</footer>
+
+</body>
+</html>

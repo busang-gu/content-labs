@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>캐러셀 레퍼런스</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  :root {
+    --bg: #FFFFFF;
+    --bg-alt: #F4F4F4;
+    --ink: #0A0A0A;
+    --ink-soft: #1F1F1F;
+    --muted: #888888;
+    --line: #E5E5E5;
+    --paper: #FFFFFF;
+    --dark: #0A0A0A;
+    --dark-ink: #FFFFFF;
+    --accent: #5BD66B;
+    --accent-soft: #E8F8E4;
+    --accent-deep: #2E9B3F;
+    --gold: #C9A24A;
+    --danger: #C0392B;
+    --shadow: 0 1px 0 rgba(0,0,0,0.03), 0 6px 20px -8px rgba(0,0,0,0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", sans-serif;
+    font-weight: 450;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ====== LAYOUT ====== */
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
+
+  /* ====== TOP BAR ====== */
+  .topbar {
+    border-bottom: 1px solid var(--line);
+    padding: 14px 0;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(8px);
+  }
+  .topbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    flex-wrap: wrap;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .logo-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+  .lab-nav {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .lab-nav a {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 6px 10px;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+  .lab-nav a:hover { color: var(--ink); background: var(--bg-alt); }
+  .lab-nav a.active {
+    color: var(--ink);
+    background: var(--bg-alt);
+    font-weight: 700;
+  }
+  .top-meta {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+  .top-meta span b { color: var(--ink); font-weight: 700; }
+
+  /* ====== HERO ====== */
+  .hero {
+    padding: 56px 0 44px;
+    border-bottom: 1px solid var(--line);
+  }
+  .kicker {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--accent-deep);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .kicker::before, .kicker::after {
+    content: '';
+    height: 1px;
+    flex: 0 0 32px;
+    background: var(--accent);
+  }
+  .kicker::after { flex: 1; }
+  .hero h1 {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif;
+    font-size: clamp(36px, 5vw, 56px);
+    line-height: 1.05;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: 18px;
+    color: var(--ink);
+  }
+  .hero-sub {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    max-width: 560px;
+    line-height: 1.6;
+  }
+
+  /* ====== STATS ====== */
+  .stats {
+    background: var(--bg);
+    color: var(--ink);
+    padding: 28px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .stat {
+    padding: 4px 24px;
+    border-left: 1px solid var(--line);
+  }
+  .stat:first-child { border-left: 0; padding-left: 0; }
+  .stat-label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif;
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+  }
+  .stat-value .unit {
+    font-family: "Pretendard Variable", Pretendard, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-left: 4px;
+  }
+  .stat-value.accent { color: var(--accent-deep); }
+
+  /* ====== TOOLBAR ====== */
+  .toolbar {
+    padding: 28px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .search {
+    flex: 1;
+    min-width: 240px;
+    position: relative;
+  }
+  .search input {
+    width: 100%;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 11px 16px 11px 42px;
+    font-family: "Pretendard Variable", Pretendard, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    border-radius: 0;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search input:focus { border-color: var(--ink); }
+  .search::before {
+    content: '⌕';
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: var(--muted);
+  }
+  .select, .btn {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 11px 16px;
+    font-family: "Pretendard Variable", Pretendard, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    cursor: pointer;
+    outline: none;
+    transition: all 0.15s;
+  }
+  .select:hover, .btn:hover { border-color: var(--ink); }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+    font-weight: 800;
+  }
+  .btn-primary:hover {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+  }
+  .btn-ghost {
+    background: transparent;
+    border-color: var(--line);
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .btn-ghost:hover { color: var(--ink); }
+
+  /* ====== FILTER CHIPS ====== */
+  .chips {
+    padding: 18px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .chip {
+    background: transparent;
+    border: 1px solid var(--line);
+    padding: 6px 14px;
+    font-family: "Pretendard Variable", Pretendard, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 999px;
+    transition: all 0.15s;
+  }
+  .chip:hover { color: var(--ink); border-color: var(--ink); }
+  .chip.active {
+    background: var(--accent);
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+
+  /* ====== GRID ====== */
+  .grid {
+    padding: 40px 0 80px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+  @media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px)  { .grid { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .stat { border-left: 0; padding-left: 0; } }
+
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.18s;
+    cursor: pointer;
+    position: relative;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+    border-color: var(--ink);
+  }
+
+  .card-thumb {
+    aspect-ratio: 4 / 5;
+    background: var(--bg-alt);
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-thumb.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    background: linear-gradient(135deg, var(--bg-alt) 0%, var(--bg) 100%);
+  }
+  .card-slides {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(10,10,10,0.78);
+    color: var(--bg);
+    padding: 4px 10px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    border-radius: 2px;
+  }
+  .card-rating {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(0,0,0,0.7);
+    color: var(--gold);
+    padding: 4px 8px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    border-radius: 2px;
+  }
+  .card-saves {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--accent);
+    color: var(--ink);
+    padding: 4px 9px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    border-radius: 2px;
+  }
+  .card-body {
+    padding: 16px 18px 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .card-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: currentColor; }
+  .card-account {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .card-followers {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .card-hook {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-tags {
+    margin-top: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .tag {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 3px 7px;
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+    border-radius: 2px;
+  }
+
+  /* ====== EMPTY STATE ====== */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--muted);
+  }
+  .empty-state h3 {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+  .empty-state p {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 22px;
+  }
+
+  /* ====== MODAL ====== */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,10,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 20px;
+    overflow-y: auto;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: var(--bg);
+    max-width: 760px;
+    width: 100%;
+    padding: 48px 56px;
+    position: relative;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.2);
+    border: 1px solid var(--line);
+  }
+  .modal-close {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--muted);
+    line-height: 1;
+  }
+  .modal-close:hover { color: var(--ink); }
+  .modal-kicker {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent-deep);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .modal h2 {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 28px;
+    color: var(--ink);
+  }
+  .modal h2 em { font-style: normal; color: var(--accent-deep); font-weight: 900; }
+
+  .form-section {
+    margin-bottom: 28px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .form-section:last-of-type { border-bottom: 0; }
+  .form-section-label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--accent-deep);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .form-section-label::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--accent-deep);
+  }
+
+  .form-row {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-row.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .form-row:last-child { margin-bottom: 0; }
+  .field { display: flex; flex-direction: column; }
+  .field label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .field input, .field textarea, .field select {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 10px 14px;
+    font-family: "Pretendard Variable", Pretendard, sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    outline: none;
+    border-radius: 0;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--ink); }
+  .field textarea { resize: vertical; min-height: 80px; font-family: "Pretendard Variable", Pretendard, sans-serif; line-height: 1.6; }
+  .field textarea.script { min-height: 180px; font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; }
+
+  .field-hint {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  .rating-input { display: flex; gap: 4px; }
+  .rating-input button {
+    background: none;
+    border: 1px solid var(--line);
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--muted);
+    transition: all 0.1s;
+  }
+  .rating-input button.active {
+    background: var(--gold);
+    color: var(--ink);
+    border-color: var(--gold);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 32px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+  }
+
+  /* ====== DETAIL VIEW ====== */
+  .detail-header { margin-bottom: 32px; }
+  .detail-account {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif;
+    font-size: 32px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+  .detail-followers {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .detail-stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    background: var(--bg-alt);
+    color: var(--ink);
+    padding: 18px 20px;
+    margin-bottom: 28px;
+    border: 1px solid var(--line);
+  }
+  .detail-stat { padding: 0 16px; border-left: 1px solid var(--line); }
+  .detail-stat:first-child { border-left: 0; padding-left: 0; }
+  .detail-stat-label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .detail-stat-value {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .detail-stat-value.accent { color: var(--accent-deep); }
+  .detail-thumb {
+    width: 100%;
+    max-width: 280px;
+    aspect-ratio: 4 / 5;
+    background: var(--bg-alt);
+    background-size: cover;
+    background-position: center;
+    margin-bottom: 32px;
+    float: right;
+    margin-left: 32px;
+  }
+  .detail-section {
+    margin-bottom: 28px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .detail-section:last-of-type { border-bottom: 0; }
+  .detail-label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--accent-deep);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .detail-content {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+  }
+  .detail-content.script {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 13px;
+    background: var(--bg-alt);
+    padding: 20px;
+    line-height: 1.8;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 12px 18px;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    z-index: 200;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.25s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { background: var(--accent-deep); }
+  .toast.danger { background: var(--danger); }
+
+  .footer {
+    border-top: 1px solid var(--line);
+    padding: 32px 0;
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .footer b { color: var(--ink); font-weight: 700; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-alt); }
+  ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 0; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink); }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="topbar-left">
+      <div class="logo">
+        <div class="logo-dot"></div>
+        <span>캐러셀 레퍼런스</span>
+      </div>
+      <nav class="lab-nav">
+        <a href="../reels-lab/index.html">__ REELS</a>
+        <a href="./index.html" class="active">__ CAROUSEL</a>
+        <a href="../planning-lab/index.html">__ PLANNING</a>
+      </nav>
+    </div>
+    <div class="top-meta">
+      <span>BUILD <b>v1.0</b></span>
+      <span>STORAGE <b id="storage-status">LOCAL</b></span>
+      <span id="now-date">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker">CAROUSEL REFERENCE __ 부상구 캐러셀 아카이브</div>
+    <h1>캐러셀 레퍼런스</h1>
+    <p class="hero-sub">
+      터진 캐러셀의 표지 훅, 슬라이드 구조, 저장 패턴 분석
+    </p>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="wrap stats-grid">
+    <div class="stat">
+      <div class="stat-label">총 수집 / Total</div>
+      <div class="stat-value" id="stat-total">0<span class="unit">개</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">평균 저장수 / Avg Saves</div>
+      <div class="stat-value accent" id="stat-avg-saves">0<span class="unit">개</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">최고 조회수 / Top Views</div>
+      <div class="stat-value" id="stat-max-views">0<span class="unit">회</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">즐겨찾기 / 5★</div>
+      <div class="stat-value" id="stat-fav">0<span class="unit">개</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOLBAR -->
+<div class="wrap">
+  <div class="toolbar">
+    <div class="search">
+      <input id="search" type="text" placeholder="계정명·표지훅·태그·인사이트 검색..." />
+    </div>
+    <select class="select" id="sort-select">
+      <option value="recent">최근 수집순</option>
+      <option value="saves">저장 많은순</option>
+      <option value="views">조회수 높은순</option>
+      <option value="rating">별점 높은순</option>
+      <option value="account">계정명순</option>
+    </select>
+    <button class="btn btn-ghost" id="btn-export">↓ JSON 백업</button>
+    <button class="btn btn-ghost" id="btn-import">↑ JSON 복원</button>
+    <input type="file" id="import-file" accept="application/json" style="display:none" />
+    <button class="btn btn-primary" id="btn-add">＋ 새 캐러셀 추가</button>
+  </div>
+
+  <div class="chips" id="category-chips">
+    <button class="chip active" data-category="all">ALL</button>
+    <button class="chip" data-category="재테크">재테크</button>
+    <button class="chip" data-category="부동산">부동산</button>
+    <button class="chip" data-category="주식">주식</button>
+    <button class="chip" data-category="연금/노후">연금/노후</button>
+    <button class="chip" data-category="마인드셋">마인드셋</button>
+    <button class="chip" data-category="라이프스타일">라이프스타일</button>
+    <button class="chip" data-category="기타">기타</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="wrap" style="display:flex; justify-content:space-between; width:100%; flex-wrap:wrap; gap:16px;">
+    <span>© CAROUSEL_LAB / 부상구 — <b>perfect personal investing</b></span>
+    <span>단축키: <b>N</b> 새 캐러셀 / <b>/</b> 검색 / <b>Esc</b> 닫기</span>
+  </div>
+</footer>
+
+<!-- MODAL (FORM) -->
+<div class="modal-bg" id="modal-form">
+  <div class="modal">
+    <button class="modal-close" data-close>×</button>
+    <div class="modal-kicker" id="form-kicker">__ 새 레퍼런스 등록</div>
+    <h2 id="form-title">새 캐러셀 <em>분석</em></h2>
+
+    <!-- 1. ACCOUNT -->
+    <div class="form-section">
+      <div class="form-section-label">01 — 계정 정보</div>
+      <div class="form-row cols-2">
+        <div class="field">
+          <label>계정명 (@제외)</label>
+          <input type="text" id="f-account" placeholder="user_name" />
+        </div>
+        <div class="field">
+          <label>팔로워 수</label>
+          <input type="text" id="f-followers" placeholder="125000 또는 12.5만" />
+        </div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="field">
+          <label>캐러셀 URL</label>
+          <input type="url" id="f-url" placeholder="https://instagram.com/p/..." />
+        </div>
+        <div class="field">
+          <label>카테고리</label>
+          <select id="f-category">
+            <option value="재테크">재테크</option>
+            <option value="부동산">부동산</option>
+            <option value="주식">주식</option>
+            <option value="연금/노후">연금/노후</option>
+            <option value="마인드셋">마인드셋</option>
+            <option value="라이프스타일">라이프스타일</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. PERFORMANCE -->
+    <div class="form-section">
+      <div class="form-section-label">02 — 성과 지표</div>
+      <div class="form-row cols-4">
+        <div class="field">
+          <label>조회수</label>
+          <input type="text" id="f-views" placeholder="1200000" />
+        </div>
+        <div class="field">
+          <label>좋아요</label>
+          <input type="text" id="f-likes" placeholder="45000" />
+        </div>
+        <div class="field">
+          <label>댓글 수</label>
+          <input type="text" id="f-comments" placeholder="800" />
+        </div>
+        <div class="field">
+          <label>저장 수 ★</label>
+          <input type="text" id="f-saves" placeholder="3500" />
+        </div>
+      </div>
+      <div class="form-row cols-3">
+        <div class="field">
+          <label>슬라이드 수</label>
+          <input type="text" id="f-slides" placeholder="10" />
+        </div>
+        <div class="field">
+          <label>업로드 일자</label>
+          <input type="date" id="f-upload-date" />
+        </div>
+        <div class="field">
+          <label>비율</label>
+          <select id="f-ratio">
+            <option value="4:5">4:5 (1080×1350)</option>
+            <option value="1:1">1:1 (1080×1080)</option>
+            <option value="9:16">9:16 (1080×1920)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. THUMBNAIL -->
+    <div class="form-section">
+      <div class="form-section-label">03 — 표지 이미지</div>
+      <div class="field">
+        <label>표지 이미지 URL (또는 아래에서 업로드)</label>
+        <input type="url" id="f-thumb-url" placeholder="https://... 또는 비워두기" />
+      </div>
+      <div class="field" style="margin-top:12px;">
+        <label>또는 파일 업로드 (브라우저 저장)</label>
+        <input type="file" id="f-thumb-file" accept="image/*" />
+      </div>
+    </div>
+
+    <!-- 4. HOOK -->
+    <div class="form-section">
+      <div class="form-section-label">04 — 표지 훅 & 구조</div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>표지 텍스트 (가장 중요)</label>
+        <textarea id="f-hook" placeholder="표지에 등장한 문장을 그대로 옮겨 적기 (예: '월급 200만원, ETF 첫 매수 따라하기')"></textarea>
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>표지 디자인 패턴</label>
+        <input type="text" id="f-cover-pattern" placeholder="예) 화이트 배경 + 굵은 검정 글씨 + 옐로우 형광펜" />
+      </div>
+      <div class="field">
+        <label>슬라이드별 구조 (1슬라이드씩 줄바꿈)</label>
+        <textarea id="f-script" class="script" placeholder="01. (훅) 월급 200만, ETF 첫 매수 따라하기&#10;02. (공감) 나도 처음엔 무서웠어&#10;03. (문제) 근데 안 하면 더 손해야&#10;04. (해결) 이렇게 3단계로 시작해&#10;...&#10;10. (CTA) 저장하고 다음 월급에 바로 따라해보기"></textarea>
+        <div class="field-hint">감정 아크 (훅→공감→문제→해결→증거→심화→CTA) 기준으로 분류</div>
+      </div>
+    </div>
+
+    <!-- 5. DESIGN PATTERNS -->
+    <div class="form-section">
+      <div class="form-section-label">05 — 디자인 패턴</div>
+      <div class="form-row cols-2">
+        <div class="field">
+          <label>컬러 팔레트</label>
+          <input type="text" id="f-color" placeholder="예) 화이트+블랙+옐로우 형광" />
+        </div>
+        <div class="field">
+          <label>폰트 스타일</label>
+          <input type="text" id="f-font" placeholder="예) 산세리프 굵게, 90% 폰트" />
+        </div>
+      </div>
+      <div class="form-row cols-2">
+        <div class="field">
+          <label>레이아웃 패턴</label>
+          <input type="text" id="f-layout" placeholder="예) 텍스트 중앙 + 하단 페이지 인디케이터" />
+        </div>
+        <div class="field">
+          <label>그래픽 요소</label>
+          <input type="text" id="f-graphic" placeholder="예) 손그림 화살표, 동그라미 강조, 이모지" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. COMMENT ANALYSIS -->
+    <div class="form-section">
+      <div class="form-section-label">06 — 댓글 분석</div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>댓글 감정·반응 요약</label>
+        <textarea id="f-comment-sentiment" placeholder="예) 공감 60%, 추가 정보 요청 25%, 반발 15% / 자주 나온 질문, 가장 많이 등장한 단어"></textarea>
+      </div>
+      <div class="field">
+        <label>인상 깊었던 댓글 (3~5개)</label>
+        <textarea id="f-top-comments" placeholder="실제 댓글 원문 복사 (좋아요·답글 많은 순)"></textarea>
+      </div>
+    </div>
+
+    <!-- 7. INSIGHT -->
+    <div class="form-section">
+      <div class="form-section-label">07 — 인사이트 & 적용 아이디어</div>
+      <div class="field" style="margin-bottom:16px;">
+        <label>왜 저장됐을까? (분석)</label>
+        <textarea id="f-insight" placeholder="표지 훅의 강도, 슬라이드 구조의 흐름, 정보 가치, 디자인의 시각적 임팩트 등 가설"></textarea>
+      </div>
+      <div class="field">
+        <label>내 콘텐츠에 어떻게 적용? (액션)</label>
+        <textarea id="f-action" placeholder="구체적으로 어떤 주제·구조·표지 패턴으로 재해석할지 메모"></textarea>
+      </div>
+    </div>
+
+    <!-- 8. TAGS & RATING -->
+    <div class="form-section">
+      <div class="form-section-label">08 — 태그 & 평점</div>
+      <div class="form-row cols-2">
+        <div class="field">
+          <label>자유 태그 (쉼표로 구분)</label>
+          <input type="text" id="f-tags" placeholder="예) ETF, 초보, 비교, 숫자" />
+        </div>
+        <div class="field">
+          <label>별점 (퀄리티)</label>
+          <div class="rating-input" id="f-rating">
+            <button type="button" data-r="1">★</button>
+            <button type="button" data-r="2">★</button>
+            <button type="button" data-r="3">★</button>
+            <button type="button" data-r="4">★</button>
+            <button type="button" data-r="5">★</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" id="btn-delete" style="display:none; border-color: var(--danger); color: var(--danger);">삭제</button>
+      <button class="btn" data-close>취소</button>
+      <button class="btn btn-primary" id="btn-save">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL (DETAIL) -->
+<div class="modal-bg" id="modal-detail">
+  <div class="modal">
+    <button class="modal-close" data-close>×</button>
+    <div class="modal-kicker">__ 캐러셀 상세</div>
+    <div id="detail-body"></div>
+    <div class="modal-actions">
+      <button class="btn" id="btn-detail-edit">편집</button>
+      <button class="btn btn-primary" data-close>닫기</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CAROUSEL_LAB — 데이터 & 로직
+   ============================================================ */
+const STORAGE_KEY = 'carousel_lab_v1';
+const STORAGE_THUMB_PREFIX = 'carousel_thumb_';
+
+let items = [];
+let activeCategory = 'all';
+let activeSort = 'recent';
+let searchTerm = '';
+let editingId = null;
+let currentRating = 0;
+
+/* ---------- 유틸 ---------- */
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+const parseNumber = (v) => {
+  if (!v) return 0;
+  const s = String(v).trim().replace(/,/g, '');
+  const m = s.match(/^([\d.]+)\s*(만|천|억|k|m|K|M)?$/);
+  if (!m) return parseFloat(s) || 0;
+  const n = parseFloat(m[1]);
+  const unit = (m[2] || '').toLowerCase();
+  if (unit === '만') return n * 10000;
+  if (unit === '천') return n * 1000;
+  if (unit === '억') return n * 100000000;
+  if (unit === 'k') return n * 1000;
+  if (unit === 'm') return n * 1000000;
+  return n;
+};
+
+const formatNumber = (n) => {
+  n = Number(n) || 0;
+  if (n >= 100000000) return (n / 100000000).toFixed(1).replace(/\.0$/, '') + '억';
+  if (n >= 10000) return (n / 10000).toFixed(1).replace(/\.0$/, '') + '만';
+  if (n >= 1000) return n.toLocaleString();
+  return n.toString();
+};
+
+const showToast = (msg, type = '') => {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 2200);
+};
+
+/* ---------- 저장/로드 ---------- */
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    items = raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    items = [];
+  }
+}
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+function saveThumb(id, dataUrl) {
+  try { localStorage.setItem(STORAGE_THUMB_PREFIX + id, dataUrl); }
+  catch(e) { showToast('썸네일 저장 실패 (용량 초과)', 'danger'); }
+}
+function getThumb(id, urlField) {
+  const stored = localStorage.getItem(STORAGE_THUMB_PREFIX + id);
+  return stored || urlField || '';
+}
+function deleteThumb(id) {
+  localStorage.removeItem(STORAGE_THUMB_PREFIX + id);
+}
+
+/* ---------- 통계 ---------- */
+function renderStats() {
+  $('#stat-total').innerHTML = items.length + '<span class="unit">개</span>';
+  const saves = items.map(r => parseNumber(r.saves)).filter(v => v > 0);
+  const avgSaves = saves.length ? Math.round(saves.reduce((a, b) => a + b, 0) / saves.length) : 0;
+  const views = items.map(r => parseNumber(r.views)).filter(v => v > 0);
+  const maxViews = views.length ? Math.max(...views) : 0;
+  $('#stat-avg-saves').innerHTML = formatNumber(avgSaves) + '<span class="unit">개</span>';
+  $('#stat-max-views').innerHTML = formatNumber(maxViews) + '<span class="unit">회</span>';
+  $('#stat-fav').innerHTML = items.filter(r => r.rating === 5).length + '<span class="unit">개</span>';
+}
+
+/* ---------- 필터/정렬 ---------- */
+function getFiltered() {
+  let list = [...items];
+  if (activeCategory !== 'all') list = list.filter(r => r.category === activeCategory);
+  if (searchTerm) {
+    const t = searchTerm.toLowerCase();
+    list = list.filter(r =>
+      (r.account || '').toLowerCase().includes(t) ||
+      (r.hook || '').toLowerCase().includes(t) ||
+      (r.script || '').toLowerCase().includes(t) ||
+      (r.tags || '').toLowerCase().includes(t) ||
+      (r.insight || '').toLowerCase().includes(t)
+    );
+  }
+  if (activeSort === 'recent') list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  if (activeSort === 'saves') list.sort((a, b) => parseNumber(b.saves) - parseNumber(a.saves));
+  if (activeSort === 'views') list.sort((a, b) => parseNumber(b.views) - parseNumber(a.views));
+  if (activeSort === 'rating') list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  if (activeSort === 'account') list.sort((a, b) => (a.account || '').localeCompare(b.account || ''));
+  return list;
+}
+
+/* ---------- 카드 그리드 ---------- */
+function renderGrid() {
+  const grid = $('#grid');
+  const list = getFiltered();
+  if (list.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <h3>아직 수집한 캐러셀이 없어요</h3>
+        <p>오른쪽 위 <b>＋ 새 캐러셀 추가</b> 버튼으로 첫 레퍼런스를 등록해보세요.</p>
+        <button class="btn btn-primary" onclick="openForm()">＋ 새 캐러셀 추가</button>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map((r) => {
+    const thumb = getThumb(r.id, r.thumbUrl);
+    const thumbStyle = thumb ? `background-image:url('${thumb.replace(/'/g, "\\'")}')` : '';
+    const tags = (r.tags || '').split(',').map(t => t.trim()).filter(Boolean).slice(0, 4);
+    return `
+      <article class="card" onclick="openDetail('${r.id}')">
+        <div class="card-thumb ${thumb ? '' : 'empty'}" style="${thumbStyle}">
+          ${!thumb ? '__ NO COVER' : ''}
+          ${r.rating ? `<div class="card-rating">★ ${r.rating}</div>` : ''}
+          ${r.saves ? `<div class="card-saves">💾 ${formatNumber(parseNumber(r.saves))}</div>` : ''}
+          ${r.slides ? `<div class="card-slides">${r.slides} SLIDES</div>` : ''}
+        </div>
+        <div class="card-body">
+          <div class="card-meta">
+            <span>${r.category || '기타'}</span>
+            <span class="dot"></span>
+            <span>${r.uploadDate || '—'}</span>
+          </div>
+          <div class="card-account">@${r.account || 'unknown'}</div>
+          <div class="card-followers">팔로워 ${r.followers ? formatNumber(parseNumber(r.followers)) : '—'} · 조회 ${r.views ? formatNumber(parseNumber(r.views)) : '—'}</div>
+          <div class="card-hook">${(r.hook || r.script || '').slice(0, 120) || '(표지 훅 미입력)'}</div>
+          ${tags.length ? `<div class="card-tags">${tags.map(t => `<span class="tag">#${t}</span>`).join('')}</div>` : ''}
+        </div>
+      </article>`;
+  }).join('');
+}
+
+/* ---------- 폼 모달 ---------- */
+function openForm(id = null) {
+  editingId = id;
+  resetForm();
+  if (id) {
+    const r = items.find(x => x.id === id);
+    if (!r) return;
+    $('#form-title').innerHTML = '캐러셀 <em>편집</em>';
+    $('#form-kicker').textContent = '__ 편집';
+    $('#btn-delete').style.display = 'inline-block';
+    [
+      ['account', r.account], ['followers', r.followers], ['url', r.url],
+      ['views', r.views], ['likes', r.likes], ['comments', r.comments],
+      ['saves', r.saves], ['slides', r.slides], ['upload-date', r.uploadDate],
+      ['thumb-url', r.thumbUrl], ['hook', r.hook],
+      ['cover-pattern', r.coverPattern], ['script', r.script],
+      ['color', r.color], ['font', r.font], ['layout', r.layout], ['graphic', r.graphic],
+      ['comment-sentiment', r.commentSentiment], ['top-comments', r.topComments],
+      ['insight', r.insight], ['action', r.action], ['tags', r.tags]
+    ].forEach(([k, v]) => { const el = $('#f-' + k); if (el) el.value = v || ''; });
+    $('#f-category').value = r.category || '재테크';
+    $('#f-ratio').value = r.ratio || '4:5';
+    setRating(r.rating || 0);
+  } else {
+    $('#form-title').innerHTML = '새 캐러셀 <em>분석</em>';
+    $('#form-kicker').textContent = '__ 새 레퍼런스 등록';
+    $('#btn-delete').style.display = 'none';
+  }
+  $('#modal-form').classList.add('show');
+}
+
+function resetForm() {
+  ['account','followers','url','views','likes','comments','saves','slides','upload-date',
+   'thumb-url','hook','cover-pattern','script','color','font','layout','graphic',
+   'comment-sentiment','top-comments','insight','action','tags'].forEach(k => {
+    const el = $('#f-' + k); if (el) el.value = '';
+  });
+  $('#f-thumb-file').value = '';
+  $('#f-category').value = '재테크';
+  $('#f-ratio').value = '4:5';
+  setRating(0);
+}
+
+function setRating(n) {
+  currentRating = n;
+  $$('.rating-input button').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.r) <= n);
+  });
+}
+
+function closeAllModals() {
+  $$('.modal-bg').forEach(m => m.classList.remove('show'));
+}
+
+/* ---------- 저장 ---------- */
+function saveItem() {
+  const account = $('#f-account').value.trim();
+  if (!account) { showToast('계정명은 필수예요', 'danger'); return; }
+
+  const data = {
+    id: editingId || uid(),
+    account, followers: $('#f-followers').value.trim(),
+    url: $('#f-url').value.trim(),
+    category: $('#f-category').value,
+    views: $('#f-views').value.trim(),
+    likes: $('#f-likes').value.trim(),
+    comments: $('#f-comments').value.trim(),
+    saves: $('#f-saves').value.trim(),
+    slides: $('#f-slides').value.trim(),
+    uploadDate: $('#f-upload-date').value,
+    ratio: $('#f-ratio').value,
+    thumbUrl: $('#f-thumb-url').value.trim(),
+    hook: $('#f-hook').value.trim(),
+    coverPattern: $('#f-cover-pattern').value.trim(),
+    script: $('#f-script').value.trim(),
+    color: $('#f-color').value.trim(),
+    font: $('#f-font').value.trim(),
+    layout: $('#f-layout').value.trim(),
+    graphic: $('#f-graphic').value.trim(),
+    commentSentiment: $('#f-comment-sentiment').value.trim(),
+    topComments: $('#f-top-comments').value.trim(),
+    insight: $('#f-insight').value.trim(),
+    action: $('#f-action').value.trim(),
+    tags: $('#f-tags').value.trim(),
+    rating: currentRating,
+    createdAt: editingId ? (items.find(r => r.id === editingId)?.createdAt || Date.now()) : Date.now(),
+    updatedAt: Date.now()
+  };
+
+  const file = $('#f-thumb-file').files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      saveThumb(data.id, e.target.result);
+      commitSave(data);
+    };
+    reader.readAsDataURL(file);
+  } else {
+    commitSave(data);
+  }
+}
+
+function commitSave(data) {
+  if (editingId) {
+    const idx = items.findIndex(r => r.id === editingId);
+    if (idx >= 0) items[idx] = data;
+  } else {
+    items.unshift(data);
+  }
+  saveData();
+  closeAllModals();
+  renderStats();
+  renderGrid();
+  showToast(editingId ? '수정 완료' : '캐러셀 저장 완료', 'success');
+  editingId = null;
+}
+
+function deleteItem() {
+  if (!editingId) return;
+  if (!confirm('이 레퍼런스를 삭제할까요?')) return;
+  items = items.filter(r => r.id !== editingId);
+  deleteThumb(editingId);
+  saveData();
+  closeAllModals();
+  renderStats();
+  renderGrid();
+  showToast('삭제됨', 'danger');
+  editingId = null;
+}
+
+/* ---------- 디테일 ---------- */
+function openDetail(id) {
+  const r = items.find(x => x.id === id);
+  if (!r) return;
+  const thumb = getThumb(r.id, r.thumbUrl);
+  $('#detail-body').innerHTML = `
+    <div class="detail-header">
+      <div class="detail-account">@${r.account}</div>
+      <div class="detail-followers">팔로워 ${r.followers ? formatNumber(parseNumber(r.followers)) : '—'} · ${r.category || '기타'} · ${r.uploadDate || '업로드일 미정'}</div>
+    </div>
+
+    <div class="detail-stats">
+      <div class="detail-stat"><div class="detail-stat-label">조회</div><div class="detail-stat-value">${r.views ? formatNumber(parseNumber(r.views)) : '—'}</div></div>
+      <div class="detail-stat"><div class="detail-stat-label">좋아요</div><div class="detail-stat-value">${r.likes ? formatNumber(parseNumber(r.likes)) : '—'}</div></div>
+      <div class="detail-stat"><div class="detail-stat-label">댓글</div><div class="detail-stat-value">${r.comments ? formatNumber(parseNumber(r.comments)) : '—'}</div></div>
+      <div class="detail-stat"><div class="detail-stat-label">저장</div><div class="detail-stat-value accent">${r.saves ? formatNumber(parseNumber(r.saves)) : '—'}</div></div>
+      <div class="detail-stat"><div class="detail-stat-label">슬라이드</div><div class="detail-stat-value">${r.slides ? r.slides + '장' : '—'}</div></div>
+    </div>
+
+    ${thumb ? `<div class="detail-thumb" style="background-image:url('${thumb.replace(/'/g, "\\'")}')"></div>` : ''}
+
+    ${r.hook ? `<div class="detail-section"><div class="detail-label">__ 표지 텍스트</div><div class="detail-content"><strong>${escapeHtml(r.hook)}</strong></div></div>` : ''}
+    ${r.coverPattern ? `<div class="detail-section"><div class="detail-label">__ 표지 디자인 패턴</div><div class="detail-content">${escapeHtml(r.coverPattern)}</div></div>` : ''}
+    ${r.script ? `<div class="detail-section"><div class="detail-label">__ 슬라이드별 구조</div><div class="detail-content script">${escapeHtml(r.script)}</div></div>` : ''}
+
+    ${(r.color || r.font || r.layout || r.graphic) ? `
+      <div class="detail-section">
+        <div class="detail-label">__ 디자인 패턴</div>
+        <div class="detail-content">
+          ${r.color ? `<div>· 컬러: ${escapeHtml(r.color)}</div>` : ''}
+          ${r.font ? `<div>· 폰트: ${escapeHtml(r.font)}</div>` : ''}
+          ${r.layout ? `<div>· 레이아웃: ${escapeHtml(r.layout)}</div>` : ''}
+          ${r.graphic ? `<div>· 그래픽: ${escapeHtml(r.graphic)}</div>` : ''}
+        </div>
+      </div>` : ''}
+
+    ${r.commentSentiment ? `<div class="detail-section"><div class="detail-label">__ 댓글 감정 분석</div><div class="detail-content">${escapeHtml(r.commentSentiment)}</div></div>` : ''}
+    ${r.topComments ? `<div class="detail-section"><div class="detail-label">__ 인상 깊은 댓글</div><div class="detail-content">${escapeHtml(r.topComments)}</div></div>` : ''}
+
+    ${r.insight ? `<div class="detail-section"><div class="detail-label">__ 왜 저장됐을까</div><div class="detail-content">${escapeHtml(r.insight)}</div></div>` : ''}
+    ${r.action ? `<div class="detail-section"><div class="detail-label">__ 적용 아이디어</div><div class="detail-content">${escapeHtml(r.action)}</div></div>` : ''}
+
+    ${r.tags ? `<div class="detail-section"><div class="detail-label">__ 태그</div><div class="detail-content">${r.tags.split(',').map(t => `<span class="tag" style="margin-right:6px;">#${escapeHtml(t.trim())}</span>`).join('')}</div></div>` : ''}
+    ${r.rating ? `<div class="detail-section"><div class="detail-label">__ 평점</div><div class="detail-content" style="color:var(--gold);font-size:20px;">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div></div>` : ''}
+    ${r.url ? `<div class="detail-section"><div class="detail-label">__ 원본 링크</div><div class="detail-content"><a href="${r.url}" target="_blank" style="color:var(--accent-deep);text-decoration:underline;">${escapeHtml(r.url)}</a></div></div>` : ''}
+  `;
+  $('#btn-detail-edit').onclick = () => { closeAllModals(); openForm(id); };
+  $('#modal-detail').classList.add('show');
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------- JSON 백업/복원 ---------- */
+function exportJSON() {
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    items: items,
+    thumbs: {}
+  };
+  items.forEach(r => {
+    const t = localStorage.getItem(STORAGE_THUMB_PREFIX + r.id);
+    if (t) payload.thumbs[r.id] = t;
+  });
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `carousel-lab-backup-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('백업 파일 다운로드 완료', 'success');
+}
+
+function importJSON(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const list = data.items || data.reels;
+      if (!Array.isArray(list)) throw new Error('형식 오류');
+      if (!confirm(`${list.length}개 항목을 불러옵니다. 현재 데이터를 덮어쓸까요?\n(취소: 병합 / 확인: 덮어쓰기)`)) {
+        const existingIds = new Set(items.map(r => r.id));
+        const merged = [...items, ...list.filter(r => !existingIds.has(r.id))];
+        items = merged;
+      } else {
+        items = list;
+      }
+      if (data.thumbs) {
+        Object.entries(data.thumbs).forEach(([id, t]) => {
+          try { localStorage.setItem(STORAGE_THUMB_PREFIX + id, t); } catch(e) {}
+        });
+      }
+      saveData();
+      renderStats();
+      renderGrid();
+      showToast('복원 완료', 'success');
+    } catch (err) {
+      showToast('파일 형식이 잘못됐어요', 'danger');
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- 이벤트 바인딩 ---------- */
+function init() {
+  loadData();
+  renderStats();
+  renderGrid();
+
+  const d = new Date();
+  $('#now-date').textContent = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+
+  $('#search').addEventListener('input', (e) => {
+    searchTerm = e.target.value;
+    renderGrid();
+  });
+
+  $('#sort-select').addEventListener('change', (e) => {
+    activeSort = e.target.value;
+    renderGrid();
+  });
+
+  $$('#category-chips .chip').forEach(c => {
+    c.addEventListener('click', () => {
+      $$('#category-chips .chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+      activeCategory = c.dataset.category;
+      renderGrid();
+    });
+  });
+
+  $('#btn-add').addEventListener('click', () => openForm());
+  $('#btn-save').addEventListener('click', saveItem);
+  $('#btn-delete').addEventListener('click', deleteItem);
+  $('#btn-export').addEventListener('click', exportJSON);
+  $('#btn-import').addEventListener('click', () => $('#import-file').click());
+  $('#import-file').addEventListener('change', (e) => {
+    if (e.target.files[0]) importJSON(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  $$('.rating-input button').forEach(b => {
+    b.addEventListener('click', (e) => {
+      e.preventDefault();
+      setRating(parseInt(b.dataset.r));
+    });
+  });
+
+  $$('[data-close]').forEach(b => b.addEventListener('click', closeAllModals));
+  $$('.modal-bg').forEach(m => {
+    m.addEventListener('click', (e) => { if (e.target === m) closeAllModals(); });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.matches('input, textarea, select')) return;
+    if (e.key === 'n' || e.key === 'N') { e.preventDefault(); openForm(); }
+    if (e.key === '/') { e.preventDefault(); $('#search').focus(); }
+    if (e.key === 'Escape') closeAllModals();
+  });
+}
+
+init();
+</script>
+</body>
+</html>
