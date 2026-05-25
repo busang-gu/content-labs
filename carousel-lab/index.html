@@ -1491,15 +1491,21 @@ AILab.init({
   onAnalyzed: ({ meta, analysis }) => {
     openForm();
     const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+    // 사용자가 모달에 입력한 메타
     set('f-account', meta.account);
     set('f-url', meta.url);
     set('f-category', meta.category);
     set('f-views', meta.views);
     set('f-saves', meta.saves);
     set('f-slides', meta.slides);
+    // AI 분석 결과
     set('f-hook', analysis.hook);
     set('f-cover-pattern', analysis.coverPattern);
     set('f-script', analysis.script);
+    set('f-color', analysis.color);
+    set('f-font', analysis.font);
+    set('f-layout', analysis.layout);
+    set('f-graphic', analysis.graphic);
     set('f-comment-sentiment', analysis.commentSentiment);
     set('f-top-comments', analysis.topComments);
     set('f-insight', analysis.insight);
