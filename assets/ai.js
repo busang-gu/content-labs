@@ -28,32 +28,52 @@
       ],
       async call(model, key, prompt) {
         const url = 'https://api.groq.com/openai/v1/chat/completions';
-        const body = {
+        const sys = 'You MUST respond with ONLY a single valid JSON object. No markdown fences. No code blocks. No prose before or after. Output must start with { and end with }. All values must be strings. Use Korean inside string values.';
+        const baseBody = {
           model,
           messages: [
-            { role: 'system', content: '당신은 응답을 반드시 유효한 JSON 객체로만 출력합니다. JSON 외 다른 텍스트는 절대 포함하지 않습니다.' },
+            { role: 'system', content: sys },
             { role: 'user', content: prompt }
           ],
-          response_format: { type: 'json_object' },
           temperature: 0.7
         };
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${key}`
-          },
-          body: JSON.stringify(body)
-        });
-        if (!res.ok) {
-          let msg = `HTTP ${res.status}`;
-          try { const e = await res.json(); msg = e.error?.message || msg; } catch (_) {}
-          throw new Error(msg);
+
+        async function send(useJsonMode) {
+          const body = useJsonMode
+            ? { ...baseBody, response_format: { type: 'json_object' } }
+            : baseBody;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${key}`
+            },
+            body: JSON.stringify(body)
+          });
+          if (!res.ok) {
+            let msg = `HTTP ${res.status}`;
+            try { const e = await res.json(); msg = e.error?.message || msg; } catch (_) {}
+            const err = new Error(msg);
+            err.status = res.status;
+            throw err;
+          }
+          const data = await res.json();
+          const text = data.choices?.[0]?.message?.content;
+          if (!text) throw new Error('Groq 응답이 비어있어요');
+          return parseJsonLoose(text);
         }
-        const data = await res.json();
-        const text = data.choices?.[0]?.message?.content;
-        if (!text) throw new Error('Groq 응답이 비어있어요');
-        return parseJsonLoose(text);
+
+        // 1차: JSON 모드 시도
+        try {
+          return await send(true);
+        } catch (err) {
+          const m = String(err.message || '');
+          // JSON 생성 실패면 모드 끄고 재시도 (프롬프트의 강한 지시로 JSON 받기)
+          if (m.includes('Failed to generate JSON') || m.includes('json_object') || m.includes('JSON 파싱 실패')) {
+            return await send(false);
+          }
+          throw err;
+        }
       }
     },
     gemini: {
@@ -99,10 +119,20 @@
 
   /* ---------- 헬퍼 ---------- */
   function parseJsonLoose(text) {
+    if (!text) throw new Error('JSON 파싱 실패: 빈 응답');
+    // 1) 그대로 파싱
     try { return JSON.parse(text); } catch (_) {}
+    // 2) ```json ... ``` 또는 ``` ... ``` 코드블록 제거 후 파싱
+    const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fence) {
+      try { return JSON.parse(fence[1].trim()); } catch (_) {}
+    }
+    // 3) 첫 { 부터 마지막 } 까지 추출
     const m = text.match(/\{[\s\S]*\}/);
     if (m) {
       try { return JSON.parse(m[0]); } catch (_) {}
+      // 3-1) trailing comma 제거 시도
+      try { return JSON.parse(m[0].replace(/,\s*([}\]])/g, '$1')); } catch (_) {}
     }
     throw new Error('JSON 파싱 실패');
   }
@@ -196,7 +226,9 @@ ${meta.comments || '(미입력)'}
 분석 대상은 부상구 채널(2030 재테크 입문자, "먼저 해본 동반자" 포지셔닝)의 컨텐츠 영감용입니다.
 ${common}
 ${meta.script ? `[영상 받아쓰기 스크립트 - 있을 경우]\n${meta.script}\n` : ''}
-다음 6개 항목을 한국어로 분석하여 JSON으로만 출력하세요:
+
+[작업]
+다음 6개 항목을 한국어로 분석합니다.
 
 1. hook: 첫 3초에 등장했을 것으로 추정되는 훅 문장 한 줄 (15~25자, 후크가 강한 단어 사용)
 2. commentSentiment: 댓글의 감정 분포 (예: "공감 60%·질문 25%·반발 15%")와 자주 등장한 단어·질문 (3~4줄)
@@ -205,7 +237,18 @@ ${meta.script ? `[영상 받아쓰기 스크립트 - 있을 경우]\n${meta.scri
 5. action: 부상구 채널(2030 재테크 입문자, "같이 알아보자" 톤)에 어떻게 변주·적용할지 구체적 아이디어 2~3개
 6. tags: 콘텐츠를 분류할 자유 태그 4~6개 (쉼표로 구분, 짧게)
 
-반드시 위 6개 필드를 모두 포함한 JSON 객체로만 응답. 다른 텍스트 없이.`;
+[출력 형식]
+정확히 아래 JSON 구조로만 응답하세요. 모든 값은 문자열입니다.
+설명·코드블록(\`\`\`)·전후 텍스트 일절 금지. 응답은 { 로 시작해서 } 로 끝나야 합니다.
+
+{
+  "hook": "여기에 훅 문장",
+  "commentSentiment": "여기에 감정 분포와 주요 단어",
+  "topComments": "댓글1\\n댓글2\\n댓글3",
+  "insight": "여기에 왜 터졌는지 분석",
+  "action": "여기에 적용 아이디어",
+  "tags": "태그1, 태그2, 태그3, 태그4"
+}`;
     }
 
     if (type === 'carousel') {
@@ -213,18 +256,33 @@ ${meta.script ? `[영상 받아쓰기 스크립트 - 있을 경우]\n${meta.scri
 분석 대상은 부상구 채널(2030 재테크 입문자, "먼저 해본 동반자" 포지셔닝)의 컨텐츠 영감용입니다.
 ${common}
 ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
-다음 8개 항목을 한국어로 분석하여 JSON으로만 출력하세요:
+
+[작업]
+다음 8개 항목을 한국어로 분석합니다.
 
 1. hook: 표지(첫 슬라이드)에 등장했을 것으로 추정되는 핵심 문구 (15~30자)
 2. coverPattern: 표지 디자인 패턴 추정 한 줄 (예: "화이트 배경 + 굵은 검정 글씨 + 노란 형광펜")
-3. script: 10장 안팎의 슬라이드 구조 추정 (감정 아크: 훅→공감→문제→해결→증거→CTA 기준). "01. (역할) 내용" 형식으로 한 줄씩
+3. script: 10장 안팎의 슬라이드 구조 추정 (감정 아크: 훅→공감→문제→해결→증거→CTA 기준). "01. (역할) 내용" 형식으로 한 줄씩, 줄바꿈으로 구분
 4. commentSentiment: 댓글 감정 분포 + 자주 등장한 단어·질문 (3~4줄)
 5. topComments: 가장 임팩트 있는 댓글 3~5개 한 줄씩 (원문, 줄바꿈 구분)
 6. insight: 왜 이 캐러셀이 저장됐는지 분석 (3~5줄). 표지 훅·슬라이드 흐름·정보 가치·시각적 임팩트 중 핵심 요인
 7. action: 부상구 채널에 어떻게 변주할지 구체 아이디어 2~3개
 8. tags: 자유 태그 4~6개 (쉼표 구분)
 
-반드시 위 8개 필드를 모두 포함한 JSON 객체로만 응답. 다른 텍스트 없이.`;
+[출력 형식]
+정확히 아래 JSON 구조로만 응답하세요. 모든 값은 문자열입니다.
+설명·코드블록(\`\`\`)·전후 텍스트 일절 금지. 응답은 { 로 시작해서 } 로 끝나야 합니다.
+
+{
+  "hook": "여기에 표지 핵심 문구",
+  "coverPattern": "여기에 디자인 패턴",
+  "script": "01. (훅) ...\\n02. (공감) ...\\n03. (문제) ...",
+  "commentSentiment": "여기에 감정 분포와 주요 단어",
+  "topComments": "댓글1\\n댓글2\\n댓글3",
+  "insight": "여기에 왜 저장됐는지 분석",
+  "action": "여기에 적용 아이디어",
+  "tags": "태그1, 태그2, 태그3, 태그4"
+}`;
     }
   }
 
