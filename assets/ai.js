@@ -1,66 +1,153 @@
 /* ============================================================
-   AILab — Gemini 무료 API 기반 AI 분석 보조
+   AILab — 무료 LLM API 기반 AI 분석 보조 (멀티 프로바이더)
+   지원: Google Gemini · Groq
    사용처: reels-lab, carousel-lab
    ============================================================ */
 (function () {
-  const KEY_API = 'gemini_api_key';
-  const KEY_MODEL = 'gemini_model';
-  const DEFAULT_MODEL = 'gemini-2.0-flash';
-  const MODEL_OPTIONS = [
-    { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (권장 · 무료)' },
-    { id: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash Lite (더 빠름 · 무료)' },
-    { id: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash (안정 · 무료)' },
-    { id: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro (정확 · 무료 한도 적음)' }
-  ];
+  const K_PROVIDER = 'ailab_provider';
+  const K_KEY = (p) => `ailab_key_${p}`;
+  const K_MODEL = (p) => `ailab_model_${p}`;
+  // 레거시 호환
+  const LEGACY_GEMINI_KEY = 'gemini_api_key';
+  const LEGACY_GEMINI_MODEL = 'gemini_model';
 
-  /* ---------- 키/모델 ---------- */
-  function getApiKey() { return localStorage.getItem(KEY_API) || ''; }
-  function setApiKey(v) { localStorage.setItem(KEY_API, v); }
-  function clearApiKey() { localStorage.removeItem(KEY_API); }
-  function getModel() { return localStorage.getItem(KEY_MODEL) || DEFAULT_MODEL; }
-  function setModel(v) { localStorage.setItem(KEY_MODEL, v); }
-
-  /* ---------- Gemini 호출 ---------- */
-  async function callGemini(prompt, schema) {
-    const apiKey = getApiKey();
-    if (!apiKey) throw new Error('Gemini API 키를 먼저 설정해주세요');
-    const model = getModel();
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-
-    const body = {
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: 'application/json',
-        temperature: 0.7
+  /* ---------- 프로바이더 정의 ---------- */
+  const PROVIDERS = {
+    groq: {
+      label: 'Groq',
+      tagline: '가장 빠름 · 한국에서 안정적 · 분당 30회',
+      keyUrl: 'https://console.groq.com/keys',
+      keyHint: '발급: console.groq.com/keys (구글/깃허브 로그인) · gsk_... 형식 · 카드 등록 불필요',
+      keyPrefix: 'gsk_',
+      defaultModel: 'llama-3.3-70b-versatile',
+      models: [
+        { id: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B (권장 · 한국어 강함)' },
+        { id: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B (가장 빠름)' },
+        { id: 'gemma2-9b-it', label: 'Gemma 2 9B (Google)' },
+        { id: 'meta-llama/llama-4-scout-17b-16e-instruct', label: 'Llama 4 Scout 17B (있다면)' }
+      ],
+      async call(model, key, prompt) {
+        const url = 'https://api.groq.com/openai/v1/chat/completions';
+        const body = {
+          model,
+          messages: [
+            { role: 'system', content: '당신은 응답을 반드시 유효한 JSON 객체로만 출력합니다. JSON 외 다른 텍스트는 절대 포함하지 않습니다.' },
+            { role: 'user', content: prompt }
+          ],
+          response_format: { type: 'json_object' },
+          temperature: 0.7
+        };
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`
+          },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          let msg = `HTTP ${res.status}`;
+          try { const e = await res.json(); msg = e.error?.message || msg; } catch (_) {}
+          throw new Error(msg);
+        }
+        const data = await res.json();
+        const text = data.choices?.[0]?.message?.content;
+        if (!text) throw new Error('Groq 응답이 비어있어요');
+        return parseJsonLoose(text);
       }
-    };
-    if (schema) body.generationConfig.responseSchema = schema;
-
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-
-    if (!res.ok) {
-      let msg = `HTTP ${res.status}`;
-      try { const e = await res.json(); msg = e.error?.message || msg; } catch (_) {}
-      throw new Error(msg);
+    },
+    gemini: {
+      label: 'Google Gemini',
+      tagline: '무료 한도 큼 · 분당 15회 · 하루 1,500회',
+      keyUrl: 'https://aistudio.google.com/apikey',
+      keyHint: '발급: aistudio.google.com/apikey (구글 로그인) · AIza... 형식 · 카드 불필요',
+      keyPrefix: 'AIza',
+      defaultModel: 'gemini-2.0-flash',
+      models: [
+        { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash (권장)' },
+        { id: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash Lite (가장 빠름)' },
+        { id: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash (안정)' },
+        { id: 'gemini-1.5-pro-latest', label: 'Gemini 1.5 Pro (정확)' }
+      ],
+      async call(model, key, prompt, schema) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+        const body = {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.7
+          }
+        };
+        if (schema) body.generationConfig.responseSchema = schema;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          let msg = `HTTP ${res.status}`;
+          try { const e = await res.json(); msg = e.error?.message || msg; } catch (_) {}
+          throw new Error(msg);
+        }
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error('Gemini 응답이 비어있어요');
+        return parseJsonLoose(text);
+      }
     }
+  };
 
-    const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) throw new Error('Gemini 응답이 비어있어요');
-
-    try { return JSON.parse(text); }
-    catch (e) {
-      const m = text.match(/\{[\s\S]*\}/);
-      if (m) return JSON.parse(m[0]);
-      throw new Error('Gemini 응답을 JSON으로 파싱할 수 없어요');
+  /* ---------- 헬퍼 ---------- */
+  function parseJsonLoose(text) {
+    try { return JSON.parse(text); } catch (_) {}
+    const m = text.match(/\{[\s\S]*\}/);
+    if (m) {
+      try { return JSON.parse(m[0]); } catch (_) {}
     }
+    throw new Error('JSON 파싱 실패');
   }
 
-  /* ---------- 프롬프트 빌더 ---------- */
+  function getProvider() {
+    let p = localStorage.getItem(K_PROVIDER);
+    if (!p) {
+      // 레거시: gemini_api_key 가 있으면 gemini를 기본
+      if (localStorage.getItem(LEGACY_GEMINI_KEY)) p = 'gemini';
+      else p = 'groq';
+    }
+    return PROVIDERS[p] ? p : 'groq';
+  }
+  function setProvider(p) { localStorage.setItem(K_PROVIDER, p); }
+
+  function getApiKey(provider) {
+    const p = provider || getProvider();
+    let v = localStorage.getItem(K_KEY(p));
+    if (!v && p === 'gemini') v = localStorage.getItem(LEGACY_GEMINI_KEY);
+    return v || '';
+  }
+  function setApiKey(provider, v) { localStorage.setItem(K_KEY(provider), v); }
+  function clearApiKey(provider) {
+    localStorage.removeItem(K_KEY(provider));
+    if (provider === 'gemini') localStorage.removeItem(LEGACY_GEMINI_KEY);
+  }
+
+  function getModel(provider) {
+    const p = provider || getProvider();
+    let v = localStorage.getItem(K_MODEL(p));
+    if (!v && p === 'gemini') v = localStorage.getItem(LEGACY_GEMINI_MODEL);
+    return v || PROVIDERS[p].defaultModel;
+  }
+  function setModel(provider, v) { localStorage.setItem(K_MODEL(provider), v); }
+
+  /* ---------- 분석 호출 ---------- */
+  async function analyze(prompt, schema) {
+    const p = getProvider();
+    const key = getApiKey(p);
+    if (!key) throw new Error(`${PROVIDERS[p].label} API 키를 먼저 저장해주세요`);
+    const model = getModel(p);
+    return PROVIDERS[p].call(model, key, prompt, schema);
+  }
+
+  /* ---------- 프롬프트 + 스키마 ---------- */
   const SCHEMAS = {
     reels: {
       type: 'OBJECT',
@@ -141,7 +228,7 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
     }
   }
 
-  /* ---------- 스타일 주입 ---------- */
+  /* ---------- 스타일 ---------- */
   function injectStyles() {
     if (document.getElementById('ailab-styles')) return;
     const css = `
@@ -160,6 +247,13 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
 .ailab-section:last-of-type{border-bottom:0;}
 .ailab-label{font-family:ui-monospace,Menlo,monospace;font-size:10px;letter-spacing:0.2em;color:#2E9B3F;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
 .ailab-label::before{content:'';width:24px;height:1px;background:#2E9B3F;}
+.ailab-tabs{display:flex;gap:0;margin-bottom:14px;border:1px solid #E5E5E5;}
+.ailab-tab{flex:1;background:#FFF;border:none;border-right:1px solid #E5E5E5;padding:12px 14px;font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:700;letter-spacing:0.06em;color:#888;cursor:pointer;transition:all .15s;text-align:left;}
+.ailab-tab:last-child{border-right:0;}
+.ailab-tab:hover{color:#0A0A0A;background:#F4F4F4;}
+.ailab-tab.active{background:#0A0A0A;color:#FFF;}
+.ailab-tab .tab-name{display:block;font-size:12px;margin-bottom:3px;letter-spacing:-0.01em;font-family:"Pretendard Variable",Pretendard,sans-serif;}
+.ailab-tab .tab-sub{font-size:9px;letter-spacing:0.05em;opacity:0.7;}
 .ailab-field{display:flex;flex-direction:column;margin-bottom:12px;}
 .ailab-field:last-child{margin-bottom:0;}
 .ailab-field label{font-family:ui-monospace,Menlo,monospace;font-size:10px;letter-spacing:0.12em;color:#888;text-transform:uppercase;margin-bottom:6px;}
@@ -169,9 +263,9 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
 .ailab-field textarea.big{min-height:160px;}
 .ailab-row{display:grid;gap:12px;margin-bottom:12px;grid-template-columns:1fr 1fr;}
 .ailab-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
-.ailab-hint{font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#888;margin-top:6px;letter-spacing:0.04em;line-height:1.5;}
+.ailab-hint{font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#888;margin-top:6px;letter-spacing:0.04em;line-height:1.6;}
 .ailab-hint a{color:#2E9B3F;text-decoration:underline;}
-.ailab-keybox{display:flex;gap:8px;align-items:center;background:#F4F4F4;padding:10px 12px;border:1px solid #E5E5E5;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#0A0A0A;}
+.ailab-keybox{display:flex;gap:8px;align-items:center;background:#F4F4F4;padding:10px 12px;border:1px solid #E5E5E5;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#0A0A0A;flex-wrap:wrap;}
 .ailab-keybox.ok{background:#E8F8E4;border-color:#5BD66B;color:#2E9B3F;font-weight:700;}
 .ailab-keybox button{background:transparent;border:1px solid #888;padding:4px 8px;font-family:ui-monospace,Menlo,monospace;font-size:10px;cursor:pointer;color:#0A0A0A;}
 .ailab-keybox button:hover{border-color:#0A0A0A;}
@@ -181,7 +275,7 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
 .ailab-actions .primary{background:#0A0A0A;color:#FFF;border-color:#0A0A0A;font-weight:800;}
 .ailab-actions .primary:hover{background:#2E9B3F;border-color:#2E9B3F;}
 .ailab-actions .primary:disabled{background:#888;border-color:#888;cursor:not-allowed;}
-.ailab-status{font-family:ui-monospace,Menlo,monospace;font-size:11px;padding:10px 14px;margin-top:14px;letter-spacing:0.04em;}
+.ailab-status{font-family:ui-monospace,Menlo,monospace;font-size:11px;padding:10px 14px;margin-top:14px;letter-spacing:0.04em;line-height:1.6;}
 .ailab-status.loading{background:#F4F4F4;color:#0A0A0A;}
 .ailab-status.error{background:#FFE8E5;color:#C0392B;}
 .ailab-status.success{background:#E8F8E4;color:#2E9B3F;font-weight:700;}
@@ -198,7 +292,6 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
     document.head.appendChild(style);
   }
 
-  /* ---------- 토스트 ---------- */
   function ensureToast() {
     let t = document.getElementById('ailab-toast');
     if (!t) {
@@ -216,7 +309,7 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
     setTimeout(() => t.classList.remove('show'), 2400);
   }
 
-  /* ---------- 모달 빌더 ---------- */
+  /* ---------- 모달 ---------- */
   function buildModal(type, onAnalyzed) {
     const id = 'ailab-modal-' + type;
     let modal = document.getElementById(id);
@@ -224,9 +317,7 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
 
     const isReels = type === 'reels';
     const titleLabel = isReels ? '릴스' : '캐러셀';
-    const captionPh = isReels
-      ? '릴스 게시물 캡션 전문을 그대로 복사 — 본문이 짧으면 비워둬도 됩니다'
-      : '캐러셀 게시물 캡션 전문을 그대로 복사';
+    const captionPh = '게시물 캡션 전문을 그대로 복사 — 본문이 짧으면 비워둬도 됨';
     const commentsPh = '좋아요/답글 많은 댓글들을 한 번에 복사 (한 줄 또는 여러 줄, 형식 자유)';
 
     modal = document.createElement('div');
@@ -235,17 +326,21 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
     modal.innerHTML = `
       <div class="ailab-modal" role="dialog" aria-modal="true">
         <button class="ailab-close" data-ailab-close>×</button>
-        <div class="ailab-kicker">__ AI ANALYSIS · GEMINI</div>
+        <div class="ailab-kicker">__ AI ANALYSIS</div>
         <h2>${titleLabel} <em>자동 분석</em></h2>
 
-        <div class="ailab-section" data-key-section>
-          <div class="ailab-label">01 — API 키 (Google AI Studio · 무료)</div>
-          <div data-key-area></div>
-          <div class="ailab-hint">
-            · 키 발급: <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> (구글 로그인만, 카드 불필요)<br>
-            · 무료 한도: gemini-2.0-flash 기준 분당 15회, 하루 1,500회<br>
-            · 키는 본인 브라우저(localStorage)에만 저장 — 외부 전송 없음
+        <div class="ailab-section">
+          <div class="ailab-label">01 — AI 프로바이더 선택</div>
+          <div class="ailab-tabs" data-tabs>
+            ${Object.entries(PROVIDERS).map(([id, p]) => `
+              <button type="button" class="ailab-tab" data-provider="${id}">
+                <span class="tab-name">${p.label}</span>
+                <span class="tab-sub">${p.tagline}</span>
+              </button>
+            `).join('')}
           </div>
+          <div data-key-area></div>
+          <div class="ailab-hint" data-key-hint></div>
         </div>
 
         <div class="ailab-section">
@@ -298,7 +393,7 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
           ${isReels ? `
           <div class="ailab-field">
             <label>영상 받아쓰기 스크립트 (선택)</label>
-            <textarea data-field="script" placeholder="영상 자막·내레이션을 받아쓴 텍스트가 있으면 붙여넣기 — 없으면 비워둬도 됩니다"></textarea>
+            <textarea data-field="script" placeholder="영상 자막·내레이션을 받아쓴 텍스트가 있으면 붙여넣기"></textarea>
           </div>` : ''}
           <div class="ailab-hint">
             모바일 인스타에서 게시물 → 우측 상단 ⋯ → "캡션 복사" / 댓글은 길게 눌러 복사
@@ -315,34 +410,55 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
     `;
     document.body.appendChild(modal);
 
-    /* 키 영역 렌더 */
+    /* ---- 탭 ---- */
+    let currentProvider = getProvider();
+    const tabBtns = modal.querySelectorAll('[data-provider]');
+
+    function syncTabs() {
+      tabBtns.forEach(b => b.classList.toggle('active', b.dataset.provider === currentProvider));
+      renderKeyArea();
+    }
+    tabBtns.forEach(b => {
+      b.addEventListener('click', () => {
+        currentProvider = b.dataset.provider;
+        setProvider(currentProvider);
+        syncTabs();
+      });
+    });
+
+    /* ---- 키 영역 ---- */
+    const keyArea = modal.querySelector('[data-key-area]');
+    const keyHint = modal.querySelector('[data-key-hint]');
+
     function renderKeyArea() {
-      const area = modal.querySelector('[data-key-area]');
-      const key = getApiKey();
-      const model = getModel();
+      const p = PROVIDERS[currentProvider];
+      const key = getApiKey(currentProvider);
+      const model = getModel(currentProvider);
+      keyHint.innerHTML = p.keyHint + ` · <a href="${p.keyUrl}" target="_blank">키 발급/관리 →</a>`;
+
       if (key) {
-        const masked = key.slice(0, 6) + '••••' + key.slice(-4);
-        area.innerHTML = `
+        const masked = key.length > 12 ? key.slice(0, 6) + '••••' + key.slice(-4) : '••••';
+        keyArea.innerHTML = `
           <div class="ailab-keybox ok">
-            <span>✓ API 키 저장됨 · ${masked}</span>
-            <span style="flex:1"></span>
+            <span>✓ ${p.label} 키 저장됨 · ${masked}</span>
+            <span style="flex:1;min-width:8px;"></span>
             <select data-model style="background:#FFF;border:1px solid #5BD66B;padding:4px 8px;font-family:ui-monospace,Menlo,monospace;font-size:10px;">
-              ${MODEL_OPTIONS.map(m => `<option value="${m.id}" ${m.id === model ? 'selected' : ''}>${m.label}</option>`).join('')}
+              ${p.models.map(m => `<option value="${m.id}" ${m.id === model ? 'selected' : ''}>${m.label}</option>`).join('')}
             </select>
             <button data-key-edit>변경</button>
             <button data-key-clear>제거</button>
           </div>
         `;
-        area.querySelector('[data-key-edit]').onclick = renderKeyForm;
-        area.querySelector('[data-key-clear]').onclick = () => {
-          if (confirm('저장된 Gemini API 키를 삭제할까요?')) {
-            clearApiKey();
+        keyArea.querySelector('[data-key-edit]').onclick = renderKeyForm;
+        keyArea.querySelector('[data-key-clear]').onclick = () => {
+          if (confirm(`${p.label} API 키를 삭제할까요?`)) {
+            clearApiKey(currentProvider);
             renderKeyArea();
             showToast('API 키 삭제됨', 'danger');
           }
         };
-        area.querySelector('[data-model]').onchange = (e) => {
-          setModel(e.target.value);
+        keyArea.querySelector('[data-model]').onchange = (e) => {
+          setModel(currentProvider, e.target.value);
           showToast('모델 변경: ' + e.target.value, 'success');
         };
       } else {
@@ -350,43 +466,40 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
       }
     }
     function renderKeyForm() {
-      const area = modal.querySelector('[data-key-area]');
-      area.innerHTML = `
+      const p = PROVIDERS[currentProvider];
+      keyArea.innerHTML = `
         <div class="ailab-field" style="margin-bottom:8px;">
-          <label>Gemini API Key</label>
-          <input type="password" data-key-input placeholder="AIza... 로 시작하는 키를 붙여넣기" />
+          <label>${p.label} API Key</label>
+          <input type="password" data-key-input placeholder="${p.keyPrefix}... 형식의 키를 붙여넣기" />
         </div>
         <div style="display:flex;gap:8px;">
-          <button class="primary" data-key-save style="background:#0A0A0A;color:#FFF;border:1px solid #0A0A0A;padding:8px 16px;font-family:'Pretendard Variable',Pretendard,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">저장</button>
-          ${getApiKey() ? '<button data-key-cancel style="background:transparent;border:1px solid #E5E5E5;padding:8px 14px;font-family:ui-monospace,Menlo,monospace;font-size:11px;cursor:pointer;">취소</button>' : ''}
+          <button data-key-save style="background:#0A0A0A;color:#FFF;border:1px solid #0A0A0A;padding:8px 16px;font-family:'Pretendard Variable',Pretendard,sans-serif;font-size:12px;font-weight:700;cursor:pointer;">저장</button>
+          ${getApiKey(currentProvider) ? '<button data-key-cancel style="background:transparent;border:1px solid #E5E5E5;padding:8px 14px;font-family:ui-monospace,Menlo,monospace;font-size:11px;cursor:pointer;">취소</button>' : ''}
         </div>
       `;
-      area.querySelector('[data-key-save]').onclick = () => {
-        const v = area.querySelector('[data-key-input]').value.trim();
+      keyArea.querySelector('[data-key-save]').onclick = () => {
+        const v = keyArea.querySelector('[data-key-input]').value.trim();
         if (!v) { showToast('키를 입력해주세요', 'danger'); return; }
-        setApiKey(v);
+        setApiKey(currentProvider, v);
         renderKeyArea();
         showToast('API 키 저장됨', 'success');
       };
-      const cancel = area.querySelector('[data-key-cancel]');
+      const cancel = keyArea.querySelector('[data-key-cancel]');
       if (cancel) cancel.onclick = renderKeyArea;
     }
-    renderKeyArea();
 
-    /* 닫기 */
-    modal.querySelectorAll('[data-ailab-close]').forEach(b => b.onclick = () => {
-      modal.classList.remove('show');
-    });
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.classList.remove('show');
-    });
+    syncTabs();
 
-    /* 분석 실행 */
+    /* ---- 닫기 ---- */
+    modal.querySelectorAll('[data-ailab-close]').forEach(b => b.onclick = () => modal.classList.remove('show'));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+
+    /* ---- 분석 실행 ---- */
     const analyzeBtn = modal.querySelector('[data-analyze]');
     const statusEl = modal.querySelector('[data-status]');
 
     analyzeBtn.onclick = async () => {
-      if (!getApiKey()) {
+      if (!getApiKey(currentProvider)) {
         statusEl.innerHTML = '<div class="ailab-status error">API 키를 먼저 저장해주세요</div>';
         return;
       }
@@ -411,11 +524,12 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
       }
 
       analyzeBtn.disabled = true;
-      statusEl.innerHTML = '<div class="ailab-status loading"><span class="ailab-spinner"></span>Gemini가 분석 중… (5~15초)</div>';
+      const providerLabel = PROVIDERS[currentProvider].label;
+      statusEl.innerHTML = `<div class="ailab-status loading"><span class="ailab-spinner"></span>${providerLabel}가 분석 중… (3~15초)</div>`;
 
       try {
         const prompt = buildPrompt(type, meta);
-        const analysis = await callGemini(prompt, SCHEMAS[type]);
+        const analysis = await analyze(prompt, SCHEMAS[type]);
         statusEl.innerHTML = '<div class="ailab-status success">✓ 분석 완료 — 폼에 채워넣는 중...</div>';
         setTimeout(() => {
           modal.classList.remove('show');
@@ -425,7 +539,16 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
         }, 400);
       } catch (err) {
         console.error(err);
-        statusEl.innerHTML = `<div class="ailab-status error">분석 실패: ${err.message}</div>`;
+        let hint = '';
+        const msg = String(err.message || '');
+        if (msg.includes('quota') || msg.includes('Quota') || msg.includes('limit: 0')) {
+          hint = `<br>→ 한도/지역 이슈입니다. 다른 프로바이더(${currentProvider === 'gemini' ? 'Groq' : 'Gemini'}) 탭으로 전환하거나, 새 프로젝트로 키를 재발급해보세요.`;
+        } else if (msg.includes('401') || msg.includes('403') || msg.toLowerCase().includes('unauthorized') || msg.toLowerCase().includes('api key')) {
+          hint = '<br>→ API 키가 잘못됐거나 권한이 없어요. 키를 다시 확인해주세요.';
+        } else if (msg.includes('429')) {
+          hint = '<br>→ 분당 호출 한도를 초과했어요. 10~30초 후 다시 시도.';
+        }
+        statusEl.innerHTML = `<div class="ailab-status error">분석 실패: ${msg}${hint}</div>`;
         analyzeBtn.disabled = false;
       }
     };
@@ -442,7 +565,7 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
     const btn = document.createElement('button');
     btn.className = 'ailab-btn';
     btn.innerHTML = '✨ ' + (buttonLabel || 'AI 분석');
-    btn.title = 'Gemini AI로 캡션·댓글 자동 분석';
+    btn.title = 'AI(Groq·Gemini)로 캡션·댓글 자동 분석';
     btn.onclick = () => modal.classList.add('show');
 
     if (insertBefore) {
@@ -452,7 +575,6 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
         return;
       }
     }
-
     const container = typeof buttonContainer === 'string'
       ? document.querySelector(buttonContainer)
       : buttonContainer;
@@ -463,5 +585,12 @@ ${meta.slides ? `[슬라이드 수]\n${meta.slides}장\n` : ''}
     container.appendChild(btn);
   }
 
-  window.AILab = { init, getApiKey, setApiKey, clearApiKey, getModel, setModel, callGemini };
+  window.AILab = {
+    init,
+    getProvider, setProvider,
+    getApiKey, setApiKey, clearApiKey,
+    getModel, setModel,
+    analyze,
+    PROVIDERS
+  };
 })();
