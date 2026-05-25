@@ -1471,9 +1471,25 @@ AILab.init({
     set('f-framing', analysis.framing);
     set('f-comment-sentiment', analysis.commentSentiment);
     set('f-top-comments', analysis.topComments);
-    set('f-insight', analysis.insight);
+    // verdict를 insight 앞에 prepend
+    const insightCombined = analysis.verdict
+      ? `[성과 판정]\n${analysis.verdict}\n\n[분석]\n${analysis.insight || ''}`
+      : analysis.insight;
+    set('f-insight', insightCombined);
     set('f-action', analysis.action);
-    set('f-tags', analysis.tags);
+    // verdict에서 등급 태그 자동 추출 (🔥/🟢/🟡/🔴/❓)
+    let verdictTag = '';
+    if (analysis.verdict) {
+      if (analysis.verdict.includes('🔥')) verdictTag = '터짐-바이럴';
+      else if (analysis.verdict.includes('🟢')) verdictTag = '터짐';
+      else if (analysis.verdict.includes('🟡')) verdictTag = '평타';
+      else if (analysis.verdict.includes('🔴')) verdictTag = '저조';
+      else if (analysis.verdict.includes('❓')) verdictTag = '판단불가';
+    }
+    const finalTags = verdictTag
+      ? (analysis.tags ? `${verdictTag}, ${analysis.tags}` : verdictTag)
+      : analysis.tags;
+    set('f-tags', finalTags);
   }
 });
 </script>
