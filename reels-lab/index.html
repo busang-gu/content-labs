@@ -1443,5 +1443,32 @@ function init() {
 
 init();
 </script>
+
+<!-- AI 분석 (Gemini 무료) -->
+<script src="../assets/ai.js"></script>
+<script>
+AILab.init({
+  type: 'reels',
+  insertBefore: '#btn-add',
+  buttonLabel: 'AI 분석',
+  onAnalyzed: ({ meta, analysis }) => {
+    openForm();
+    const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+    set('f-account', meta.account);
+    set('f-url', meta.url);
+    set('f-category', meta.category);
+    set('f-views', meta.views);
+    set('f-likes', meta.likes);
+    set('f-duration', meta.duration);
+    set('f-script', meta.script);
+    set('f-hook', analysis.hook);
+    set('f-comment-sentiment', analysis.commentSentiment);
+    set('f-top-comments', analysis.topComments);
+    set('f-insight', analysis.insight);
+    set('f-action', analysis.action);
+    set('f-tags', analysis.tags);
+  }
+});
+</script>
 </body>
 </html>
